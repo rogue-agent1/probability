@@ -1,11 +1,11 @@
-# Probability
+# probability
 
-Probability distributions and statistical tests.
+Probability calculator — combinations, distributions, Bayes
 
 ## Usage
 
 ```bash
-python3 probability.py
+python3 probability.py --help
 ```
 
 ## License
