@@ -1,27 +1,62 @@
 #!/usr/bin/env python3
-"""Probability — combinatorics, distributions, Bayes theorem."""
-import sys, math
+"""probability - Probability distributions and sampling."""
+import sys, math, random
+
 def factorial(n):
-    r=1
-    for i in range(2,n+1): r*=i
+    r = 1
+    for i in range(2, n + 1):
+        r *= i
     return r
-def comb(n,r): return factorial(n)//(factorial(r)*factorial(n-r)) if r<=n else 0
-def perm(n,r): return factorial(n)//factorial(n-r) if r<=n else 0
-def binomial(n,k,p): return comb(n,k)*(p**k)*((1-p)**(n-k))
-def poisson(k,lam): return (lam**k)*math.exp(-lam)/factorial(k)
-def bayes(p_a, p_b_given_a, p_b): return p_a*p_b_given_a/p_b if p_b else 0
-def cli():
-    if len(sys.argv)<2: print("Usage: probability comb|perm|binom|poisson|bayes [args]"); sys.exit(1)
-    cmd=sys.argv[1]
-    if cmd=="comb": print(f"  C({sys.argv[2]},{sys.argv[3]}) = {comb(int(sys.argv[2]),int(sys.argv[3]))}")
-    elif cmd=="perm": print(f"  P({sys.argv[2]},{sys.argv[3]}) = {perm(int(sys.argv[2]),int(sys.argv[3]))}")
-    elif cmd=="binom":
-        n,k,p=int(sys.argv[2]),int(sys.argv[3]),float(sys.argv[4])
-        print(f"  B({n},{k},{p}) = {binomial(n,k,p):.6f}")
-    elif cmd=="poisson":
-        k,lam=int(sys.argv[2]),float(sys.argv[3])
-        print(f"  P({k};λ={lam}) = {poisson(k,lam):.6f}")
-    elif cmd=="bayes":
-        pa,pba,pb=float(sys.argv[2]),float(sys.argv[3]),float(sys.argv[4])
-        print(f"  P(A|B) = {bayes(pa,pba,pb):.6f}")
-if __name__=="__main__": cli()
+
+def comb(n, k):
+    if k < 0 or k > n:
+        return 0
+    return factorial(n) // (factorial(k) * factorial(n - k))
+
+def binomial_pmf(k, n, p):
+    return comb(n, k) * p**k * (1-p)**(n-k)
+
+def binomial_cdf(k, n, p):
+    return sum(binomial_pmf(i, n, p) for i in range(k + 1))
+
+def poisson_pmf(k, lam):
+    return math.exp(-lam) * lam**k / factorial(k)
+
+def normal_pdf(x, mu=0, sigma=1):
+    return math.exp(-0.5*((x-mu)/sigma)**2) / (sigma * math.sqrt(2*math.pi))
+
+def normal_cdf(x, mu=0, sigma=1):
+    return 0.5 * (1 + math.erf((x - mu) / (sigma * math.sqrt(2))))
+
+def exponential_pdf(x, lam):
+    return lam * math.exp(-lam * x) if x >= 0 else 0
+
+def sample_normal(mu=0, sigma=1):
+    u1 = random.random()
+    u2 = random.random()
+    z = math.sqrt(-2 * math.log(u1)) * math.cos(2 * math.pi * u2)
+    return mu + sigma * z
+
+def test():
+    # binomial: coin flip
+    assert abs(binomial_pmf(5, 10, 0.5) - 0.24609375) < 1e-6
+    assert abs(binomial_cdf(10, 10, 0.5) - 1.0) < 1e-9
+    # poisson
+    assert abs(poisson_pmf(0, 1) - math.exp(-1)) < 1e-9
+    assert abs(sum(poisson_pmf(k, 3) for k in range(20)) - 1.0) < 1e-6
+    # normal
+    assert abs(normal_cdf(0) - 0.5) < 1e-9
+    assert abs(normal_cdf(1.96) - 0.975) < 0.001
+    assert abs(normal_pdf(0) - 1/math.sqrt(2*math.pi)) < 1e-9
+    # sampling
+    random.seed(42)
+    samples = [sample_normal(10, 2) for _ in range(10000)]
+    mean = sum(samples) / len(samples)
+    assert abs(mean - 10) < 0.1
+    print("OK: probability")
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1 and sys.argv[1] == "test":
+        test()
+    else:
+        print("Usage: probability.py test")

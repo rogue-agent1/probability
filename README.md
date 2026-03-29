@@ -1,13 +1,11 @@
 # probability
 
-Probability calculator — combinations, distributions, Bayes
+Probability distributions and sampling.
 
 ## Usage
 
 ```bash
-python3 probability.py --help
+python3 probability.py test
 ```
 
-## License
-
-MIT
+Zero dependencies. Python 3.8+.
